@@ -635,6 +635,14 @@
     
 </div>
 <div class="note">※ 常用字會儲存在此電腦瀏覽器的本機儲存空間（localStorage）。</div>
+<!-- 🧓 進階模式底部：切換極簡模式（刻意小字，避免長輩誤觸） -->
+<div style="margin-top:10px; display:flex; justify-content:center;">
+  <span id="goSimpleLink"
+        style="font-size:14px; color:#6b7280; text-decoration:underline; cursor:pointer; padding:6px 8px; border-radius:10px;"
+        role="button" tabindex="0" aria-label="切換極簡模式">
+    切換極簡模式
+  </span>
+</div>
     
 </div>
 
@@ -2287,10 +2295,92 @@ function showAdvancedMode() {
   if (simpleModeEl) simpleModeEl.style.display = "none";
   if (advancedEl) advancedEl.style.display = "block";
 }
+/* =========================
+   2.5：雙向切換入口 + 長按標題 3 秒切換
+   ========================= */
+
+// 進階 → 極簡：底部小連結
+const goSimpleLink = document.getElementById("goSimpleLink");
+if (goSimpleLink) {
+  const toSimple = () => showSimpleMode();
+  goSimpleLink.addEventListener("click", toSimple);
+  goSimpleLink.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") toSimple();
+  });
+}
+
+// 極簡 → 進階：你已經有 goAdvancedLink，我這裡確保它一定能用
+if (typeof bindAdvancedSwitch === "function") {
+  // 你第2個已呼叫過也沒關係，重複綁定風險低；若你想避免重複，可移除此段
+  bindAdvancedSwitch();
+} else {
+  // 若你不小心刪到第2個的 bindAdvancedSwitch，這裡做保底
+  const goAdvancedLink2 = document.getElementById("goAdvancedLink");
+  if (goAdvancedLink2) {
+    const toAdvanced = () => showAdvancedMode();
+    goAdvancedLink2.addEventListener("click", toAdvanced);
+    goAdvancedLink2.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") toAdvanced();
+    });
+  }
+}
+
+/* ---- 長按標題 3 秒切換（避免誤觸） ----
+   - 長按「進階模式標題」→ 進入極簡
+   - 長按「極簡模式標題」→ 回到進階
+*/
+function enableLongPressToggleTitle(titleEl, targetMode /* "simple" | "advanced" */) {
+  if (!titleEl) return;
+
+  let timer = null;
+  const HOLD_MS = 3000;
+
+  const startHold = (e) => {
+    // 避免手機長按出現選取/選單干擾
+    try { e.preventDefault(); } catch {}
+    clearTimeout(timer);
+
+    timer = setTimeout(() => {
+      timer = null;
+      if (targetMode === "simple") {
+        showSimpleMode();
+        // 給一個明確提示，避免長輩不知道發生什麼
+        try { simpleSetStatus("已切換到極簡模式"); } catch {}
+      } else {
+        showAdvancedMode();
+      }
+      // 小震動（有支援才震）
+      try { if (navigator.vibrate) navigator.vibrate(30); } catch {}
+    }, HOLD_MS);
+  };
+
+  const cancelHold = () => {
+    clearTimeout(timer);
+    timer = null;
+  };
+
+  // 滑鼠
+  titleEl.addEventListener("mousedown", startHold);
+  titleEl.addEventListener("mouseup", cancelHold);
+  titleEl.addEventListener("mouseleave", cancelHold);
+
+  // 觸控
+  titleEl.addEventListener("touchstart", startHold, { passive: false });
+  titleEl.addEventListener("touchend", cancelHold);
+  titleEl.addEventListener("touchcancel", cancelHold);
+}
+
+// 進階模式標題（你原本 .container 裡的 h1）
+const advancedTitle = document.querySelector(".container h1");
+enableLongPressToggleTitle(advancedTitle, "simple");
+
+// 極簡模式標題（simpleMode 裡的 h1）
+const simpleTitle = document.querySelector("#simpleMode .simple-title");
+enableLongPressToggleTitle(simpleTitle, "advanced");
 
 // 5) 你可以在這裡決定「預設進入哪個模式」
 //    目前先：維持你原本進階模式顯示（不強制切換）
-// showSimpleMode(); // ← 如果你想預設給長輩用，就取消註解這行
+ showSimpleMode(); // ← 如果你想預設給長輩用，就取消註解這行
 
 // 6) 讓「切換進階模式」可用
 function bindAdvancedSwitch() {
