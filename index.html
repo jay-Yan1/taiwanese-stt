@@ -788,6 +788,39 @@
     <input type="file" id="importCsvInput" accept=".csv,text/csv" style="display:none">
     <input type="file" id="bgImageInput" accept="image/*" style="display:none">
 
+    <!-- =========================
+     第一次進站：選模式（記住選擇）
+     ========================= -->
+<div id="modeGate" class="modal" style="display:none;">
+  <div class="modal-content" style="max-width:560px; width:92%; text-align:center;">
+    <h2 style="margin:0 0 10px; font-size:26px;">請選擇使用模式</h2>
+    <div style="font-size:18px; color:#374151; line-height:1.5; margin-bottom:12px;">
+      給長輩使用建議選「極簡模式」。
+    </div>
+
+    <button id="chooseSimpleBtn" type="button"
+      style="width:100%; margin:10px 0; border:none; border-radius:16px; padding:16px 14px;
+             font-size:24px; font-weight:800; cursor:pointer; background:#16a34a; color:#fff;">
+      🧓 極簡模式（大按鈕、找歌最快）
+    </button>
+
+    <button id="chooseAdvancedBtn" type="button"
+      style="width:100%; margin:10px 0 6px; border:none; border-radius:16px; padding:16px 14px;
+             font-size:22px; font-weight:800; cursor:pointer; background:#2563eb; color:#fff;">
+      🛠 進階模式（完整功能）
+    </button>
+
+    <label style="display:flex; align-items:center; justify-content:center; gap:8px; margin-top:10px; font-size:16px; color:#374151;">
+      <input id="rememberModeChk" type="checkbox" checked />
+      記住我的選擇（下次自動進入）
+    </label>
+
+    <div style="margin-top:10px; font-size:14px; color:#6b7280;">
+      之後也可在頁面底部切換，或長按標題 3 秒切換。
+    </div>
+  </div>
+</div>
+
 <script>
 // 🔑 API 憑證（只需輸入一次，會保存在 localStorage）
 // 你可以用下方「🔑 API 憑證」輸入並儲存，之後不用再輸入。
@@ -2543,6 +2576,114 @@ if (simpleClearBtn) {
     try { hanjiOutput.value = ""; } catch {}
   });
 }
+    /* =========================
+   ✅ 預設啟動策略（記住模式）
+   ========================= */
+
+const MODE_KEY = "tw_tailo_mode_v1"; // "simple" | "advanced"
+const FORCE_SIMPLE_KEY = "tw_tailo_force_simple_v1"; // "1" 表示永遠極簡（可選）
+
+function getSavedMode() {
+  try { return (localStorage.getItem(MODE_KEY) || "").trim(); } catch { return ""; }
+}
+function setSavedMode(mode) {
+  try { localStorage.setItem(MODE_KEY, mode); } catch {}
+}
+function getForceSimple() {
+  try { return (localStorage.getItem(FORCE_SIMPLE_KEY) || "").trim() === "1"; } catch { return false; }
+}
+// 你想要「發給長輩就永遠極簡」時可呼叫：localStorage.setItem(FORCE_SIMPLE_KEY,"1");
+
+function openModeGate() {
+  const gate = document.getElementById("modeGate");
+  if (gate) gate.style.display = "flex";
+}
+function closeModeGate() {
+  const gate = document.getElementById("modeGate");
+  if (gate) gate.style.display = "none";
+}
+
+function initLaunchMode() {
+  // 0) 若你想強制永遠極簡（例如發給長輩），就直接走這裡
+  if (getForceSimple()) {
+    showSimpleMode();
+    return;
+  }
+
+  // 1) 若有記錄，就照記錄進入
+  const saved = getSavedMode();
+  if (saved === "simple") {
+    showSimpleMode();
+    return;
+  }
+  if (saved === "advanced") {
+    showAdvancedMode();
+    return;
+  }
+
+  // 2) 第一次進站：跳出選擇模式
+  openModeGate();
+
+  const btnSimple = document.getElementById("chooseSimpleBtn");
+  const btnAdvanced = document.getElementById("chooseAdvancedBtn");
+  const rememberChk = document.getElementById("rememberModeChk");
+
+  const remember = () => !!(rememberChk && rememberChk.checked);
+
+  if (btnSimple) {
+    btnSimple.onclick = () => {
+      if (remember()) setSavedMode("simple");
+      closeModeGate();
+      showSimpleMode();
+      try { simpleSetStatus("已切換到極簡模式"); } catch {}
+    };
+  }
+
+  if (btnAdvanced) {
+    btnAdvanced.onclick = () => {
+      if (remember()) setSavedMode("advanced");
+      closeModeGate();
+      showAdvancedMode();
+    };
+  }
+
+  // 點背景不關（避免長輩誤關）
+  const gate = document.getElementById("modeGate");
+  if (gate) {
+    gate.addEventListener("click", (e) => {
+      // 如果你想允許點背景關閉，就把下面 return 拿掉，改成 closeModeGate()
+      if (e.target === gate) {
+        // 不做事，避免誤關造成「我剛剛按到不見了」的困擾
+        return;
+      }
+    });
+  }
+}
+
+// ✅ 啟動
+initLaunchMode();
+
+/* ---- 額外：切換模式時也更新「記住模式」(可選但推薦) ----
+   這樣長輩用底部連結切換後，下次會自動進到他最後用的模式
+*/
+(function patchModeSwitchToRemember() {
+  // 包一層不破壞你原函式
+  if (typeof showSimpleMode === "function") {
+    const _showSimple = showSimpleMode;
+    showSimpleMode = function () {
+      try { setSavedMode("simple"); } catch {}
+      return _showSimple.apply(this, arguments);
+    };
+  }
+  if (typeof showAdvancedMode === "function") {
+    const _showAdvanced = showAdvancedMode;
+    showAdvancedMode = function () {
+      try { setSavedMode("advanced"); } catch {}
+      return _showAdvanced.apply(this, arguments);
+    };
+  }
+})();
+
 </script>
 </body>
 </html>
