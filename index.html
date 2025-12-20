@@ -2219,7 +2219,29 @@ hwApplyBtn.onclick = () => {
 
     alert("已將文字加入漢字輸入框。");
 };
-    /* =========================
+
+
+// ====== 開關彈窗 ======
+function openHandwrite() {
+    handwriteModal.style.display = "flex";
+    hwCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
+    hwStrokes = [];
+    hwActiveStroke = null;
+    hwLastCandidates = [];
+    hwSelectedText = "";
+    hwResult.innerText = "（尚無辨識結果）";
+    const box = document.getElementById("hwCandList");
+    if (box) box.innerHTML = "";
+};
+hwCloseBtn.onclick = () => {
+    handwriteModal.style.display = "none";
+};
+
+// 初始化：載入常用字詞庫
+loadUserDict();
+renderFavoritesBar();
+renderOtherMenu();
+ /* =========================
    🧓 極簡模式：按鈕接線
    ========================= */
 
@@ -2431,29 +2453,6 @@ if (simpleClearBtn) {
     try { hanjiOutput.value = ""; } catch {}
   });
 }
-
-
-// ====== 開關彈窗 ======
-function openHandwrite() {
-    handwriteModal.style.display = "flex";
-    hwCtx.clearRect(0, 0, handCanvas.width, handCanvas.height);
-    hwStrokes = [];
-    hwActiveStroke = null;
-    hwLastCandidates = [];
-    hwSelectedText = "";
-    hwResult.innerText = "（尚無辨識結果）";
-    const box = document.getElementById("hwCandList");
-    if (box) box.innerHTML = "";
-};
-hwCloseBtn.onclick = () => {
-    handwriteModal.style.display = "none";
-};
-
-// 初始化：載入常用字詞庫
-loadUserDict();
-renderFavoritesBar();
-renderOtherMenu();
-
 </script>
 </body>
 </html>
