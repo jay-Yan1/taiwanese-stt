@@ -435,11 +435,142 @@
         #handwriteModal h2{ text-align:center; }
         #handwriteModal #handCanvas{ max-width: 95vw; }
     }
+    /* =========================
+   🧓 極簡模式 Simple Mode
+   ========================= */
+    .simple-wrap{
+      width:min(680px, 92vw);
+      margin: 28px auto;
+      background: rgba(255,255,255,.92);
+      border-radius: 18px;
+      box-shadow: 0 12px 28px rgba(0,0,0,.12);
+      padding: 22px 18px 16px;
+    }
+    .simple-title{
+      font-size: 30px;
+      line-height: 1.25;
+      margin: 0 0 6px;
+      font-weight: 800;
+      text-align:center;
+    }
+    .simple-sub{
+      font-size: 18px;
+      margin: 0 0 16px;
+      color: #374151;
+      text-align:center;
+    }
+    .big-btn{
+      width: 100%;
+      border: none;
+      border-radius: 16px;
+      padding: 18px 16px;
+      font-size: 26px;
+      font-weight: 800;
+      cursor: pointer;
+      margin: 10px 0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 10px;
+      user-select:none;
+    }
+    .big-btn:active{ transform: translateY(1px); }
+    .btn-talk{ background:#dc2626; color:#fff; }
+    .btn-youtube{ background:#16a34a; color:#fff; }
+    .btn-clear{ background:#f59e0b; color:#111827; }
+    
+    .status{
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.4;
+      text-align:center;
+      min-height: 56px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .result{
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 14px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+    }
+    .result .label{
+      font-size: 20px;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+    .result .text{
+      font-size: 26px;
+      font-weight: 900;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+    .result .hint{
+      margin-top: 6px;
+      font-size: 18px;
+      color: #374151;
+      line-height: 1.4;
+    }
+    .footer{
+      margin-top: 14px;
+      display:flex;
+      justify-content:center;
+    }
+    .link-advanced{
+      font-size: 14px;
+      color: #6b7280;
+      text-decoration: underline;
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: 10px;
+    }
+    .link-advanced:hover{ background: rgba(0,0,0,.04); }
+    
+    @media (max-width: 480px){
+      .simple-title{ font-size: 28px; }
+      .big-btn{ font-size: 24px; padding: 18px 14px; }
+      .status{ font-size: 20px; }
+      .result .text{ font-size: 24px; }
+    }
+
 </style>
 </head>
 
 <body>
 <div class="container">
+    <!-- =========================
+     🧓 極簡模式 Simple Mode
+     ========================= -->
+<main id="simpleMode" class="simple-wrap" role="main" aria-label="台語聽歌唱歌 極簡模式" style="display:none;">
+  <h1 class="simple-title">🎵 台語聽歌・唱歌</h1>
+  <p class="simple-sub">不用打字。按紅色講話，按綠色去 YouTube。</p>
+
+  <button id="simpleTalkBtn" class="big-btn btn-talk" type="button">🔴 按這裡講話</button>
+  <button id="simpleYoutubeBtn" class="big-btn btn-youtube" type="button">🟢 去 YouTube 找歌</button>
+  <button id="simpleClearBtn" class="big-btn btn-clear" type="button">🟡 清掉，重來</button>
+
+  <div id="simpleStatus" class="status" aria-live="polite">請按紅色按鈕講話</div>
+
+  <section class="result" aria-label="辨識結果">
+    <div class="label">你剛才講的是：</div>
+    <div id="simpleResultText" class="text">（尚未輸入）</div>
+    <div class="hint">提示：講「歌手 + 歌名」，例如「江蕙 酒後的心聲」</div>
+  </section>
+
+  <div class="footer">
+    <span id="goAdvancedLink" class="link-advanced" role="button" tabindex="0">切換進階模式</span>
+  </div>
+</main>
+<<!-- =========================
+     🧓 極簡模式 Simple Mode
+     ========================= -->>
     <h1>🎤 台語語音輸入（台羅 + 漢字）</h1>
     <div class="subtitle">上方功能：複製、朗讀、管理常用字；下方按鈕：錄音與清除。</div>
 
@@ -2086,6 +2217,219 @@ hwApplyBtn.onclick = () => {
 
     alert("已將文字加入漢字輸入框。");
 };
+    /* =========================
+   🧓 極簡模式：按鈕接線
+   ========================= */
+
+// 1) 取得DOM
+const simpleModeEl = document.getElementById("simpleMode");
+const advancedEl = document.querySelector(".container"); // 你原本的主UI容器
+
+const simpleTalkBtn = document.getElementById("simpleTalkBtn");
+const simpleYoutubeBtn = document.getElementById("simpleYoutubeBtn");
+const simpleClearBtn = document.getElementById("simpleClearBtn");
+const simpleStatusEl = document.getElementById("simpleStatus");
+const simpleResultTextEl = document.getElementById("simpleResultText");
+const goAdvancedLink = document.getElementById("goAdvancedLink");
+
+// 2) 若你原本沒有 blobToBase64，補一個
+if (typeof blobToBase64 !== "function") {
+  function blobToBase64(blob) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const dataUrl = reader.result || "";
+        const base64 = String(dataUrl).split(",")[1] || "";
+        resolve(base64);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  }
+}
+
+// 3) 極簡模式狀態
+let simpleIsRecording = false;
+let simpleLastQuery = "";
+
+// 4) 顯示/隱藏模式
+function showSimpleMode() {
+  if (simpleModeEl) simpleModeEl.style.display = "block";
+  if (advancedEl) advancedEl.style.display = "none";
+  if (simpleStatusEl) simpleStatusEl.textContent = "請按紅色按鈕講話";
+}
+
+function showAdvancedMode() {
+  if (simpleModeEl) simpleModeEl.style.display = "none";
+  if (advancedEl) advancedEl.style.display = "block";
+}
+
+// 5) 你可以在這裡決定「預設進入哪個模式」
+//    目前先：維持你原本進階模式顯示（不強制切換）
+// showSimpleMode(); // ← 如果你想預設給長輩用，就取消註解這行
+
+// 6) 讓「切換進階模式」可用
+function bindAdvancedSwitch() {
+  if (!goAdvancedLink) return;
+  const fn = () => showAdvancedMode();
+  goAdvancedLink.addEventListener("click", fn);
+  goAdvancedLink.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") fn();
+  });
+}
+bindAdvancedSwitch();
+
+// 7) 極簡模式：更新畫面
+function simpleSetStatus(msg) {
+  if (simpleStatusEl) simpleStatusEl.textContent = msg;
+}
+function simpleSetResult(text) {
+  if (simpleResultTextEl) simpleResultTextEl.textContent = text || "（尚未輸入）";
+}
+
+// 8) 極簡模式：開 YouTube（加上「卡拉OK」更符合使用習慣）
+function openYouTubeForKaraoke(query) {
+  const q = (query || "").trim();
+  if (!q) return;
+  const karaokeQ = `${q} 卡拉OK`;
+  const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(karaokeQ)}`;
+  window.open(url, "_blank");
+}
+
+// 9) 極簡模式：開始錄音（按一下）
+async function simpleStartRecording() {
+  try {
+    audioChunks = []; // 你原本就有 audioChunks
+    simpleSetStatus("我在聽，你慢慢講");
+    simpleTalkBtn.textContent = "🟥 再按一次結束";
+    simpleIsRecording = true;
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+
+    mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+
+    mediaRecorder.onstop = async () => {
+      // 停止後要做辨識
+      simpleSetStatus("我聽好了，幫你處理中…");
+
+      // ⭐ 如果沒有 API Key：不要彈 alert 轟炸長輩，用大字提示
+      if (!requireApiKey()) {
+        simpleSetStatus("需要先設定一次（請家人幫忙）→ 點下面『切換進階模式』");
+        simpleTalkBtn.textContent = "🔴 按這裡講話";
+        simpleIsRecording = false;
+        return;
+      }
+
+      try {
+        const blob = new Blob(audioChunks, { type: "audio/webm" });
+        const base64Audio = await blobToBase64(blob);
+
+        const response = await fetch(
+          `https://speech.googleapis.com/v1/speech:recognize?key=${API_KEY}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              config: {
+                encoding: "WEBM_OPUS",
+                sampleRateHertz: 48000,
+                languageCode: "nan-TW"
+              },
+              audio: { content: base64Audio }
+            })
+          }
+        );
+
+        const data = await response.json();
+        const tailo = data.results?.[0]?.alternatives?.[0]?.transcript || "";
+
+        if (!tailo) {
+          simpleLastQuery = "";
+          simpleSetResult("（剛剛沒聽清楚）");
+          simpleSetStatus("剛剛沒聽清楚，再講一次沒關係");
+        } else {
+          simpleLastQuery = tailo;
+
+          // 同步更新你原本的輸入框（方便進階模式也看得到）
+          try { tailoOutput.value = tailo; } catch {}
+          try { hanjiOutput.value = tailoToHanji(tailo); } catch {}
+
+          // 極簡模式：用「漢字」顯示比較符合長輩
+          const showText = (hanjiOutput?.value || tailo).trim();
+          simpleSetResult(`「${showText}」`);
+          simpleSetStatus("我聽好了！要不要幫你去 YouTube 找？");
+        }
+      } catch (err) {
+        console.error(err);
+        simpleSetStatus("網路或服務有問題，請再試一次");
+      } finally {
+        simpleTalkBtn.textContent = "🔴 按這裡講話";
+        simpleIsRecording = false;
+      }
+    };
+
+    mediaRecorder.start();
+  } catch (err) {
+    console.error(err);
+    simpleSetStatus("無法開啟麥克風（請檢查權限）");
+    simpleTalkBtn.textContent = "🔴 按這裡講話";
+    simpleIsRecording = false;
+  }
+}
+
+// 10) 極簡模式：停止錄音（再按一次）
+function simpleStopRecording() {
+  try {
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+      mediaRecorder.stop();
+      simpleSetStatus("我聽好了，幫你處理中…");
+    }
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+// 11) 極簡模式：按鈕事件
+if (simpleTalkBtn) {
+  simpleTalkBtn.addEventListener("click", async () => {
+    if (!simpleIsRecording) await simpleStartRecording();
+    else simpleStopRecording();
+  });
+}
+
+if (simpleYoutubeBtn) {
+  simpleYoutubeBtn.addEventListener("click", () => {
+    // 優先用「漢字輸入框」內容（你已經可手動輸入），其次用辨識結果
+    const q = (hanjiOutput?.value || "").trim() || (simpleLastQuery || "").trim();
+    if (!q) {
+      simpleSetStatus("請先按紅色按鈕講話");
+      return;
+    }
+    simpleSetStatus("幫你找歌中…");
+    openYouTubeForKaraoke(q);
+  });
+}
+
+if (simpleClearBtn) {
+  simpleClearBtn.addEventListener("click", () => {
+    // 若正在錄音，先停掉，避免狀態亂掉
+    try {
+      if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
+    } catch {}
+
+    simpleIsRecording = false;
+    simpleLastQuery = "";
+    simpleTalkBtn.textContent = "🔴 按這裡講話";
+    simpleSetResult("（尚未輸入）");
+    simpleSetStatus("好了，可以再講一次");
+
+    // 同步清空進階模式輸入框
+    try { tailoOutput.value = ""; } catch {}
+    try { hanjiOutput.value = ""; } catch {}
+  });
+}
+
 
 // ====== 開關彈窗 ======
 function openHandwrite() {
