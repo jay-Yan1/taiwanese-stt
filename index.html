@@ -544,33 +544,35 @@
 </head>
 
 <body>
-<div class="container">
     <!-- =========================
      🧓 極簡模式 Simple Mode
      ========================= -->
-<main id="simpleMode" class="simple-wrap" role="main" aria-label="台語聽歌唱歌 極簡模式" style="display:none;">
-  <h1 class="simple-title">🎵 台語聽歌・唱歌</h1>
-  <p class="simple-sub">不用打字。按紅色講話，按綠色去 YouTube。</p>
+    <main id="simpleMode" class="simple-wrap" role="main" aria-label="台語聽歌唱歌 極簡模式" style="display:none;">
+      <h1 class="simple-title">🎵 台語聽歌・唱歌</h1>
+      <p class="simple-sub">不用打字。按紅色講話，按綠色去 YouTube。</p>
+    
+      <button id="simpleTalkBtn" class="big-btn btn-talk" type="button">🔴 按這裡講話</button>
+      <button id="simpleYoutubeBtn" class="big-btn btn-youtube" type="button">🟢 去 YouTube 找歌</button>
+      <button id="simpleClearBtn" class="big-btn btn-clear" type="button">🟡 清掉，重來</button>
+    
+      <div id="simpleStatus" class="status" aria-live="polite">請按紅色按鈕講話</div>
+    
+      <section class="result" aria-label="辨識結果">
+        <div class="label">你剛才講的是：</div>
+        <div id="simpleResultText" class="text">（尚未輸入）</div>
+        <div class="hint">提示：講「歌手 + 歌名」，例如「江蕙 酒後的心聲」</div>
+      </section>
+    
+      <div class="footer">
+        <span id="goAdvancedLink" class="link-advanced" role="button" tabindex="0">切換進階模式</span>
+      </div>
+    </main>
+    
+    <div class="container">
+    <!-- =========================
+     🧓 困難模式 hard Mode
+     ========================= -->
 
-  <button id="simpleTalkBtn" class="big-btn btn-talk" type="button">🔴 按這裡講話</button>
-  <button id="simpleYoutubeBtn" class="big-btn btn-youtube" type="button">🟢 去 YouTube 找歌</button>
-  <button id="simpleClearBtn" class="big-btn btn-clear" type="button">🟡 清掉，重來</button>
-
-  <div id="simpleStatus" class="status" aria-live="polite">請按紅色按鈕講話</div>
-
-  <section class="result" aria-label="辨識結果">
-    <div class="label">你剛才講的是：</div>
-    <div id="simpleResultText" class="text">（尚未輸入）</div>
-    <div class="hint">提示：講「歌手 + 歌名」，例如「江蕙 酒後的心聲」</div>
-  </section>
-
-  <div class="footer">
-    <span id="goAdvancedLink" class="link-advanced" role="button" tabindex="0">切換進階模式</span>
-  </div>
-</main>
-<<!-- =========================
-     🧓 極簡模式 Simple Mode
-     ========================= -->>
     <h1>🎤 台語語音輸入（台羅 + 漢字）</h1>
     <div class="subtitle">上方功能：複製、朗讀、管理常用字；下方按鈕：錄音與清除。</div>
 
