@@ -2438,7 +2438,8 @@ function simpleSetResult(text) {
 function openYouTubeForKaraoke(query) {
   const q = (query || "").trim();
   if (!q) return;
-  const karaokeQ = `${q} 卡拉OK`;
+  //const karaokeQ = `${q} 卡拉OK`; -------> 需要在加卡啦ＯＫ
+  const karaokeQ = `${q}`
   const url = `https://www.youtube.com/results?search_query=${encodeURIComponent(karaokeQ)}`;
   window.open(url, "_blank");
 }
