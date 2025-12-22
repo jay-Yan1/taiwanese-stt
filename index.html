@@ -820,6 +820,58 @@
     </div>
   </div>
 </div>
+<!-- 👪 家庭設定（給家人操作，避免長輩誤觸） -->
+<div id="familyModal" class="modal" style="display:none;">
+  <div class="modal-content" style="max-width:640px; width:92%; text-align:left;">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+      <h2 style="margin:0;">👪 家庭設定</h2>
+      <button id="familyCloseBtn" class="btn-outline" style="padding:6px 10px;">✕</button>
+    </div>
+
+    <div style="margin-top:10px; font-size:14px; color:#374151; line-height:1.6;">
+      這裡是給家人/照顧者設定的。建議設定完成後，平常給長輩用「極簡模式」。
+    </div>
+
+    <hr style="border:none; border-top:1px solid #e5e7eb; margin:12px 0;">
+
+    <div style="display:flex; flex-direction:column; gap:10px;">
+      <label style="display:flex; gap:10px; align-items:center; font-size:16px;">
+        <input id="forceSimpleChk" type="checkbox">
+        <span><b>永遠進入極簡模式</b>（最推薦給長輩）</span>
+      </label>
+
+      <div style="font-size:15px; color:#374151;">
+        <b>預設進入方式：</b>
+        <div style="margin-top:6px; display:flex; flex-wrap:wrap; gap:10px;">
+          <label style="display:flex; gap:8px; align-items:center;">
+            <input type="radio" name="defaultModeRadio" value="ask">
+            第一次詢問（選一次後記住）
+          </label>
+          <label style="display:flex; gap:8px; align-items:center;">
+            <input type="radio" name="defaultModeRadio" value="simple">
+            預設極簡
+          </label>
+          <label style="display:flex; gap:8px; align-items:center;">
+            <input type="radio" name="defaultModeRadio" value="advanced">
+            預設進階
+          </label>
+        </div>
+      </div>
+
+      <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:6px;">
+        <button id="btnGoSimpleNow" class="btn" type="button">🧓 立刻切到極簡模式</button>
+        <button id="btnGoAdvancedNow" class="btn-outline" type="button">🛠 立刻切到進階模式</button>
+      </div>
+
+      <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:6px;">
+        <button id="btnResetModeRemember" class="btn-danger" type="button">♻️ 重設「記住的模式」</button>
+        <button id="btnClearForceSimple" class="btn-outline" type="button">取消「永遠極簡」</button>
+      </div>
+
+      <div id="familyStatus" style="margin-top:6px; font-size:14px; color:#374151;"></div>
+    </div>
+  </div>
+</div>
 
 <script>
 // 🔑 API 憑證（只需輸入一次，會保存在 localStorage）
@@ -1578,6 +1630,13 @@ function renderOtherMenu() {
     helpBtn.dataset.action = "help";
     helpBtn.textContent = "📘 使用說明";
     otherMenu.appendChild(helpBtn);
+    
+    // 👪 家庭設定（放在「使用說明」附近）
+    const familyBtn = document.createElement("button");
+    familyBtn.type = "button";
+    familyBtn.dataset.action = "familySettings";
+    familyBtn.textContent = "👪 家庭設定";
+    otherMenu.appendChild(familyBtn);
 
     // 分隔線
     const sep = document.createElement("div");
@@ -1753,7 +1812,13 @@ otherMenu.addEventListener("click", (e) => {
   if (action === "handwrite") {
     openHandwrite();
     return;
+    }
+    if (action === "familySettings") {
+  openFamilySettings();
+  closeDropdowns?.();
+  return;
 }
+
   
   if (action && action.startsWith("run:")) {
     const id = action.slice(4);
@@ -2621,6 +2686,12 @@ function initLaunchMode() {
     showAdvancedMode();
     return;
   }
+  // 1.5) 若沒記住模式，改看「預設策略」
+  const strategy = (lsGet(DEFAULT_STRATEGY_KEY) || "ask");
+  if (strategy === "simple") { showSimpleMode(); return; }
+  if (strategy === "advanced") { showAdvancedMode(); return; }
+  // strategy === "ask" → 照原本流程 openModeGate()
+
 
   // 2) 第一次進站：跳出選擇模式
   openModeGate();
@@ -2660,6 +2731,100 @@ function initLaunchMode() {
     });
   }
 }
+/* =========================
+   👪 家庭設定：入口 + 邏輯
+   ========================= */
+const MODE_KEY = "tw_tailo_mode_v1";                 // "simple" | "advanced"
+const FORCE_SIMPLE_KEY = "tw_tailo_force_simple_v1"; // "1" 表示永遠極簡
+const DEFAULT_STRATEGY_KEY = "tw_tailo_default_strategy_v1"; // "ask" | "simple" | "advanced"
+
+function lsGet(k){ try { return (localStorage.getItem(k) || "").trim(); } catch { return ""; } }
+function lsSet(k,v){ try { localStorage.setItem(k, v); } catch {} }
+function lsDel(k){ try { localStorage.removeItem(k); } catch {} }
+
+const familyModal = document.getElementById("familyModal");
+const familyCloseBtn = document.getElementById("familyCloseBtn");
+const familyStatus = document.getElementById("familyStatus");
+
+const forceSimpleChk = document.getElementById("forceSimpleChk");
+const btnGoSimpleNow = document.getElementById("btnGoSimpleNow");
+const btnGoAdvancedNow = document.getElementById("btnGoAdvancedNow");
+const btnResetModeRemember = document.getElementById("btnResetModeRemember");
+const btnClearForceSimple = document.getElementById("btnClearForceSimple");
+
+function familySetStatus(msg){
+  if (familyStatus) familyStatus.textContent = msg || "";
+}
+
+function openFamilySettings(){
+  if (!familyModal) return;
+
+  // 同步 UI
+  const forced = lsGet(FORCE_SIMPLE_KEY) === "1";
+  if (forceSimpleChk) forceSimpleChk.checked = forced;
+
+  const strat = lsGet(DEFAULT_STRATEGY_KEY) || "ask";
+  const radios = document.querySelectorAll('input[name="defaultModeRadio"]');
+  radios.forEach(r => { r.checked = (r.value === strat); });
+
+  const savedMode = lsGet(MODE_KEY) || "（尚未記住）";
+  familySetStatus(`目前：永遠極簡=${forced ? "開" : "關"}；預設策略=${strat}；記住的模式=${savedMode}`);
+
+  familyModal.style.display = "flex";
+}
+
+function closeFamilySettings(){
+  if (!familyModal) return;
+  familyModal.style.display = "none";
+}
+
+familyCloseBtn?.addEventListener("click", closeFamilySettings);
+familyModal?.addEventListener("click", (e) => {
+  if (e.target === familyModal) closeFamilySettings();
+});
+
+// 永遠極簡 開關
+forceSimpleChk?.addEventListener("change", () => {
+  if (forceSimpleChk.checked) {
+    lsSet(FORCE_SIMPLE_KEY, "1");
+    familySetStatus("已設定：之後永遠進入極簡模式（最推薦給長輩）");
+  } else {
+    lsDel(FORCE_SIMPLE_KEY);
+    familySetStatus("已取消：不再永遠極簡");
+  }
+});
+
+// 預設策略 radio
+document.querySelectorAll('input[name="defaultModeRadio"]').forEach(radio => {
+  radio.addEventListener("change", () => {
+    const v = document.querySelector('input[name="defaultModeRadio"]:checked')?.value || "ask";
+    lsSet(DEFAULT_STRATEGY_KEY, v);
+    familySetStatus(`已設定：預設進入方式 = ${v}`);
+  });
+});
+
+// 立刻切換
+btnGoSimpleNow?.addEventListener("click", () => {
+  showSimpleMode();
+  familySetStatus("已切換到極簡模式");
+});
+btnGoAdvancedNow?.addEventListener("click", () => {
+  showAdvancedMode();
+  familySetStatus("已切換到進階模式");
+});
+
+// 重設記住的模式
+btnResetModeRemember?.addEventListener("click", () => {
+  lsDel(MODE_KEY);
+  familySetStatus("已重設：下次會重新詢問/依預設策略");
+});
+
+// 取消永遠極簡（快捷鍵）
+btnClearForceSimple?.addEventListener("click", () => {
+  lsDel(FORCE_SIMPLE_KEY);
+  if (forceSimpleChk) forceSimpleChk.checked = false;
+  familySetStatus("已取消：不再永遠極簡");
+});
 
 // ✅ 啟動
 initLaunchMode();
