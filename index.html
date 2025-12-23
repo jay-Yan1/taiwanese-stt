@@ -1320,6 +1320,7 @@ startBtn.onclick = async () => {
                                 sampleRateHertz: 48000,
                                 languageCode: "nan-TW",
                                 model: "command_and_search",
+                                useEnhanced: true,
                                 speechContexts: [{
                                 phrases: [
                                   "江蕙", "黃乙玲", "洪榮宏", "蔡小虎",
@@ -1328,7 +1329,7 @@ startBtn.onclick = async () => {
                                 ],
                                 boost: 12
                                 }]
-                                useEnhanced: true
+                                
                             },
                             audio: { content: base64Audio }
                         })
