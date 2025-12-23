@@ -907,6 +907,19 @@ function requireApiKey() {
 
 let mediaRecorder;
 let audioChunks = [];
+let currentAudioStream = null;  // 👉 記住目前麥克風串流
+    
+function stopCurrentAudioStream() {
+  if (currentAudioStream) {
+    try {
+      currentAudioStream.getTracks().forEach(t => t.stop());
+    } catch (e) {
+      console.warn("stopCurrentAudioStream error:", e);
+    }
+    currentAudioStream = null;
+  }
+}
+
 
 // 🔹 使用者自訂台羅→漢字詞庫（存到 localStorage 當作後台）
 let userDict = {};
@@ -1293,7 +1306,14 @@ startBtn.onclick = async () => {
         audioChunks = [];
         statusEl.innerText = "正在啟動麥克風…";
 
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // ⭐ 把 stream 存到全域變數
+        currentAudioStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        });
         mediaRecorder = new MediaRecorder(stream);
 
         mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
@@ -1357,6 +1377,8 @@ startBtn.onclick = async () => {
 
             startBtn.disabled = false;
             stopBtn.disabled = true;
+            // ⭐ 把麥克風真的關掉
+            stopCurrentAudioStream();
         };
 
         mediaRecorder.start();
@@ -1395,6 +1417,8 @@ clearBtn.onclick = () => {
     if (window.speechSynthesis && window.speechSynthesis.speaking) {
         window.speechSynthesis.cancel();
     }
+    stopCurrentAudioStream();
+
 };
 
 // ✍️ 手寫輸入（下方按鈕）
@@ -2537,19 +2561,21 @@ async function simpleStartRecording() {
     simpleTalkBtn.textContent = "🟥 再按一次結束";
     simpleIsRecording = true;
 
-    const stream = await navigator.mediaDevices.getUserMedia({ 
+    currentAudiostream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
         echoCancellation: true,
         noiseSuppression: true,
         autoGainControl: true
           }
         });
-    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder = new MediaRecorder(currentAudioStream);
 
     mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
 
     mediaRecorder.onstop = async () => {
       // 停止後要做辨識
+    stopCurrentAudioStream();
+
       simpleSetStatus("我聽好了，幫你處理中…");
 
       // ⭐ 如果沒有 API Key：不要彈 alert 轟炸長輩，用大字提示
@@ -2606,6 +2632,7 @@ async function simpleStartRecording() {
         simpleTalkBtn.textContent = "🔴 按這裡講話";
         simpleIsRecording = false;
       }
+        stopCurrentAudioStream();
     };
 
     mediaRecorder.start();
@@ -2662,6 +2689,8 @@ if (simpleClearBtn) {
     simpleTalkBtn.textContent = "🔴 按這裡講話";
     simpleSetResult("（尚未輸入）");
     simpleSetStatus("好了，可以再講一次");
+    stopCurrentAudioStream();
+
 
     // 同步清空進階模式輸入框
     try { tailoOutput.value = ""; } catch {}
