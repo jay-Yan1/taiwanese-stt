@@ -908,6 +908,124 @@ function requireApiKey() {
 let mediaRecorder;
 let audioChunks = [];
 let currentAudioStream = null;  // 👉 記住目前麥克風串流
+
+/* =========================
+   🎵／📈 專用詞庫（歌名／歌手／股票）
+   - 可自行加更多
+   - 用來：
+     1) 提供給 Google STT 當 speechContext（提高辨識率）
+     2) STT 回來後，做整句「標準漢字」替換
+   ========================= */
+
+// 1. 定義詞庫：以「你希望顯示的漢字句子」為主
+//    key: 任意標識（不重要）
+//    hanji: 顯示在畫面／YouTube 搜尋用的標準漢字
+//    alias: 可能的口語說法（可不填）
+const DOMAIN_ENTRIES = [
+  {
+    key: "jody-wine",
+    hanji: "江蕙 酒後的心聲",
+    alias: ["江蕙 酒後的心聲", "酒後的心聲", "江蕙的酒後的心聲"]
+  },
+  {
+    key: "huang-y-ling",
+    hanji: "黃乙玲 無字的情批",
+    alias: ["黃乙玲 無字的情批", "無字的情批"]
+  },
+  {
+    key: "taiwan-hero",
+    hanji: "洪榮宏 舞女",
+    alias: ["洪榮宏 舞女", "舞女"]
+  },
+  // 📈 股票 & ETF
+  {
+    key: "tsmc",
+    hanji: "台積電 股票",
+    alias: ["台積電", "2330", "台積電股票"]
+  },
+  {
+    key: "0050",
+    hanji: "元大台灣50 ETF 0050",
+    alias: ["0050", "台灣50", "元大台灣50"]
+  },
+  {
+    key: "006208",
+    hanji: "富邦台50 ETF 006208",
+    alias: ["006208", "富邦台50"]
+  }
+  // 👉 之後你可以慢慢增加這裡的條目
+];
+
+// 2. 幫 Google STT 準備 phrases 清單（拿來做 speechContexts）
+const DOMAIN_PHRASES = (() => {
+  const set = new Set();
+  DOMAIN_ENTRIES.forEach(e => {
+    if (e.hanji) set.add(e.hanji);
+    (e.alias || []).forEach(a => set.add(a));
+  });
+  return Array.from(set);
+})();
+
+// 3. 規範化文字，方便比對（全部小寫、移除空白／符號）
+function normalizeTextForDict(s) {
+  return (s || "")
+    .toLowerCase()
+    .replace(/\s+/g, "")        // 去掉所有空白
+    .replace(/[^\p{L}\p{N}]+/gu, ""); // 去掉標點符號，只留字母數字
+}
+
+// 4. 建立「normalized → entry」的 Map，方便查詢
+const DOMAIN_DICT_NORMALIZED = (() => {
+  const map = new Map();
+  DOMAIN_ENTRIES.forEach(e => {
+    if (e.hanji) {
+      const n = normalizeTextForDict(e.hanji);
+      if (n) map.set(n, e);
+    }
+    (e.alias || []).forEach(a => {
+      const n = normalizeTextForDict(a);
+      if (n) map.set(n, e);
+    });
+  });
+  return map;
+})();
+
+// 5. 根據 STT 回來的文字，嘗試用詞庫找「最佳匹配」
+//    目前策略：
+//    - 先看整句 normalize 後，有沒有完全 match 詞庫 key
+//    - 沒有的話，嘗試找「最長子字串」match（適合前後多講幾個字的情境）
+function lookupDomainEntry(rawText) {
+  const norm = normalizeTextForDict(rawText);
+  if (!norm) return null;
+
+  // (1) 整句 match
+  if (DOMAIN_DICT_NORMALIZED.has(norm)) {
+    return DOMAIN_DICT_NORMALIZED.get(norm);
+  }
+
+  // (2) 嘗試最長子字串 match
+  let best = null;
+  DOMAIN_DICT_NORMALIZED.forEach((entry, keyNorm) => {
+    if (!keyNorm) return;
+    if (norm.includes(keyNorm)) {
+      if (!best || keyNorm.length > best.keyNorm.length) {
+        best = { entry, keyNorm };
+      }
+    }
+  });
+
+  return best ? best.entry : null;
+}
+
+// 6. 提供一個「照詞庫優先」的漢字決定函式
+function chooseHanjiWithDomain(rawText, fallbackHanji) {
+  const e = lookupDomainEntry(rawText);
+  if (e && e.hanji) {
+    return e.hanji;
+  }
+  return fallbackHanji;
+}
+
     
 function stopCurrentAudioStream() {
   if (currentAudioStream) {
@@ -918,6 +1036,27 @@ function stopCurrentAudioStream() {
     }
     currentAudioStream = null;
   }
+}
+// ⏱ 建立 Google Speech API 的 request body（共用）
+// - base64Audio: 當前錄音的 base64 字串
+function buildSpeechRequestBody(base64Audio) {
+  return {
+    config: {
+      encoding: "WEBM_OPUS",
+      sampleRateHertz: 48000,
+      languageCode: "nan-TW",
+      // B2：針對「說關鍵字」的模式，比較適合 command_and_search
+      model: "command_and_search",
+      useEnhanced: true, // 若該語言/區域支援，會用增強模型
+      speechContexts: [
+        {
+          phrases: DOMAIN_PHRASES,
+          boost: 12.0  // 可以調 5~20，看實測效果
+        }
+      ]
+    },
+    audio: { content: base64Audio }
+  };
 }
 
 
@@ -1334,40 +1473,27 @@ startBtn.onclick = async () => {
                     {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            config: {
-                                encoding: "WEBM_OPUS",
-                                sampleRateHertz: 48000,
-                                languageCode: "nan-TW",
-                                model: "command_and_search",
-                                useEnhanced: true,
-                                speechContexts: [{
-                                phrases: [
-                                  "江蕙", "黃乙玲", "洪榮宏", "蔡小虎",
-                                  "卡拉OK", "伴唱", "KTV", "台語歌",
-                                  "台積電", "聯發科", "鴻海", "0050", "006208"
-                                ],
-                                boost: 12
-                                }]
-                                
-                            },
-                            audio: { content: base64Audio }
-                        })
+                        body: JSON.stringify(buildSpeechRequestBody(base64Audio))
                     }
                 );
 
                 const data = await response.json();
                 console.log("STT response:", data);
 
-                let tailo = data.results?.[0]?.alternatives?.[0]?.transcript || "";
-                if (!tailo) {
-                    tailoOutput.value = "（無辨識結果，請再試一次）";
-                    hanjiOutput.value = "（無辨識結果）";
-                    statusEl.innerText = "沒有辨識到語音內容，可能太小聲或太短。";
+                let rawText = data.results?.[0]?.alternatives?.[0]?.transcript || "";
+                if (!rawText) {
+                  tailoOutput.value = "（無辨識結果，請再試一次）";
+                  hanjiOutput.value = "（無辨識結果）";
+                  statusEl.innerText = "沒有辨識到語音內容，可能太小聲或太短。";
                 } else {
-                    tailoOutput.value = tailo;
-                    hanjiOutput.value = tailoToHanji(tailo);
-                    statusEl.innerText = "辨識完成，可以複製、朗讀或管理常用字。";
+                  tailoOutput.value = rawText;
+                
+                  const baseHanji = tailoToHanji(rawText);  // 原本的規則轉換
+                  hanjiOutput.value = chooseHanjiWithDomain(rawText, baseHanji);
+                
+                  statusEl.innerText = "辨識完成，可以複製、朗讀或管理常用字。";
+                }
+
                 }
 
             } catch (err) {
@@ -2595,36 +2721,31 @@ async function simpleStartRecording() {
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              config: {
-                encoding: "WEBM_OPUS",
-                sampleRateHertz: 48000,
-                languageCode: "nan-TW"
-              },
-              audio: { content: base64Audio }
-            })
+            body: JSON.stringify(buildSpeechRequestBody(base64Audio))
           }
         );
 
         const data = await response.json();
-        const tailo = data.results?.[0]?.alternatives?.[0]?.transcript || "";
+        const rawText = data.results?.[0]?.alternatives?.[0]?.transcript || "";
 
-        if (!tailo) {
+        if (!rawText) {
           simpleLastQuery = "";
           simpleSetResult("（剛剛沒聽清楚）");
           simpleSetStatus("剛剛沒聽清楚，再講一次沒關係");
         } else {
-          simpleLastQuery = tailo;
-
-          // 同步更新你原本的輸入框（方便進階模式也看得到）
-          try { tailoOutput.value = tailo; } catch {}
-          try { hanjiOutput.value = tailoToHanji(tailo); } catch {}
-
-          // 極簡模式：用「漢字」顯示比較符合長輩
-          const showText = (hanjiOutput?.value || tailo).trim();
+          simpleLastQuery = rawText;
+        
+          try { tailoOutput.value = rawText; } catch {}
+          try {
+            const baseHanji = tailoToHanji(rawText);
+            hanjiOutput.value = chooseHanjiWithDomain(rawText, baseHanji);
+          } catch {}
+        
+          const showText = (hanjiOutput?.value || rawText).trim();
           simpleSetResult(`「${showText}」`);
           simpleSetStatus("我聽好了！要不要幫你去 YouTube 找？");
         }
+
       } catch (err) {
         console.error(err);
         simpleSetStatus("網路或服務有問題，請再試一次");
