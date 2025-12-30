@@ -548,6 +548,26 @@
       .status{ font-size: 20px; }
       .result .text{ font-size: 24px; }
     }
+    /* 右上角顯示/隱藏非常用功能 */
+    #toggleExtraFeaturesBtn {
+      position: fixed;
+      top: 10px;
+      right: 8px;
+      z-index: 9999;
+
+      background: #222;
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      opacity: 0.85;
+    }
+    #toggleExtraFeaturesBtn:hover {
+      opacity: 1;
+}
+
 
 </style>
 </head>
@@ -584,7 +604,12 @@
 
     <h1>🎤 台語語音輸入測試與管理介面 </h1>
     <div class="subtitle">上方功能：複製、朗讀、管理常用字；下方按鈕：錄音與清除。</div>
-
+      <button
+      id="toggleExtraFeaturesBtn"
+      title="顯示/隱藏非常用功能"
+      >
+      🙈 隱藏非常用
+    </button>
     <!-- 上方：其他功能/ 管理常用字 -->
     <div class="upper-controls">
         <div class="dropdown">
@@ -629,6 +654,7 @@
         <div id="favoritesBar" class="favorites-bar"></div>
         <div class="fav-hint">（到「✨其他功能 → ⭐管理我的最愛」設定）</div>
     </div>
+  
 
 
 </div>
@@ -654,6 +680,7 @@
 </div>
     
 </div>
+
 
 <!-- 🔑 API 憑證視窗 -->
 <div id="apiKeyModal" class="modal" style="display:none;">
@@ -2637,6 +2664,33 @@ function enableLongPressToggleTitle(titleEl, targetMode /* "simple" | "advanced"
   titleEl.addEventListener("touchend", cancelHold);
   titleEl.addEventListener("touchcancel", cancelHold);
 }
+const toggleBtn = document.getElementById("toggleExtraFeaturesBtn");
+
+// 你要隱藏的區塊（依你目前頁面結構）
+const extraFeatureBlocks = [
+  document.getElementById("otherBtn") ||
+    document.getElementById("otherFunctionsMenu"),
+  document.getElementById("apiKeyBtn"),
+  document.getElementById("manageBtn")
+].filter(Boolean);
+
+const STORAGE_KEY = "hideExtraFeatures";
+
+function applyExtraFeatureState(hidden) {
+  extraFeatureBlocks.forEach(el => {
+    el.style.display = hidden ? "none" : "";
+  });
+  toggleBtn.textContent = hidden ? "👁 顯示非常用" : "🙈 隱藏非常用";
+}
+
+let hidden = localStorage.getItem(STORAGE_KEY) === "1";
+applyExtraFeatureState(hidden);
+
+toggleBtn.addEventListener("click", () => {
+  hidden = !hidden;
+  localStorage.setItem(STORAGE_KEY, hidden ? "1" : "0");
+  applyExtraFeatureState(hidden);
+});
 
 // 進階模式標題（你原本 .container 裡的 h1）
 const advancedTitle = document.querySelector(".container h1");
