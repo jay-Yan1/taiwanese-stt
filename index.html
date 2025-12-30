@@ -2704,7 +2704,7 @@ function applyExtraFeatureState(hidden) {
   extraFeatureBlocks.forEach(el => {
     el.style.display = hidden ? "none" : "";
   });
-  toggleBtn.textContent = hidden ? "👁 顯示非常用" : "🙈 隱藏非常用";
+  toggleBtn.textContent = hidden ? " 隱藏狀態" : " 顯示狀態";
 }
 
 let hidden = localStorage.getItem(STORAGE_KEY) === "1";
