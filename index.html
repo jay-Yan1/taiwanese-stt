@@ -554,7 +554,7 @@
       top: 10px;
       right: 8px;
       z-index: 9999;
-
+    
       background: #222;
       color: #fff;
       border: none;
@@ -566,8 +566,22 @@
     }
     #toggleExtraFeaturesBtn:hover {
       opacity: 1;
-}
-
+    }
+    /* 漢字輸入匡強調 */
+    #hanjiOutput {
+      background: #fffbe6;
+      border: 2px solid #f59e0b;
+      border-radius: 8px;
+      font-size: 20px;
+      font-weight: 600;
+      padding: 10px;
+      box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+    }
+    
+    #hanjiOutput:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.45);
+    }
 
 </style>
 </head>
@@ -818,6 +832,12 @@
         <button id="hwCloseBtn" class="btn-outline">關閉</button>
     </div>
 </div>
+<button
+  id="toggleExtraFeaturesBtn"
+  title="顯示/隱藏非常用功能"
+>
+  🙈 隱藏非常用
+</button>
 
     <!--輸入存放區-->
     <input type="file" id="importJsonInput" accept=".json,application/json" style="display:none">
@@ -1182,6 +1202,10 @@ const manualEditResetBtn = document.getElementById("manualEditResetBtn");
 const MANUAL_STORAGE_KEY = "tw_stt_manual_text_v1";
 const helpDefaultHTML = helpFallbackEl ? helpFallbackEl.innerHTML : "";
 const helpDefaultText = helpFallbackEl ? (helpFallbackEl.innerText || "").trim() : "";
+
+
+
+
 
 // ===== 📘 使用說明（Help Modal） =====
 const helpModal = document.getElementById("helpModal");
