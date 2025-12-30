@@ -548,6 +548,40 @@
       .status{ font-size: 20px; }
       .result .text{ font-size: 24px; }
     }
+    /* 右上角顯示/隱藏非常用功能 */
+    #toggleExtraFeaturesBtn {
+      position: fixed;
+      top: 10px;
+      right: 8px;
+      z-index: 9999;
+    
+      background: #222;
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      opacity: 0.85;
+    }
+    #toggleExtraFeaturesBtn:hover {
+      opacity: 1;
+    }
+    /* 漢字輸入匡強調 */
+    #hanjiOutput {
+      background: #fffbe6;
+      border: 2px solid #f59e0b;
+      border-radius: 8px;
+      font-size: 20px;
+      font-weight: 600;
+      padding: 10px;
+      box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+    }
+    
+    #hanjiOutput:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.45);
+    }
 
 </style>
 </head>
@@ -791,6 +825,12 @@
         <button id="hwCloseBtn" class="btn-outline">關閉</button>
     </div>
 </div>
+<button
+  id="toggleExtraFeaturesBtn"
+  title="顯示/隱藏非常用功能"
+>
+  🙈 隱藏非常用
+</button>
 
     <!--輸入存放區-->
     <input type="file" id="importJsonInput" accept=".json,application/json" style="display:none">
@@ -1155,6 +1195,34 @@ const manualEditResetBtn = document.getElementById("manualEditResetBtn");
 const MANUAL_STORAGE_KEY = "tw_stt_manual_text_v1";
 const helpDefaultHTML = helpFallbackEl ? helpFallbackEl.innerHTML : "";
 const helpDefaultText = helpFallbackEl ? (helpFallbackEl.innerText || "").trim() : "";
+
+const toggleBtn = document.getElementById("toggleExtraFeaturesBtn");
+
+// 你要隱藏的區塊（依你目前頁面結構）
+const extraFeatureBlocks = [
+  document.getElementById("manageBtn") ||
+    document.getElementById("otherBtn"),
+  document.getElementById("apiKeyBtn"),
+  document.getElementById("manageCommonCharsBtn")
+].filter(Boolean);
+
+const STORAGE_KEY = "hideExtraFeatures";
+
+function applyExtraFeatureState(hidden) {
+  extraFeatureBlocks.forEach(el => {
+    el.style.display = hidden ? "none" : "";
+  });
+  toggleBtn.textContent = hidden ? "👁 顯示非常用" : "🙈 隱藏非常用";
+}
+
+let hidden = localStorage.getItem(STORAGE_KEY) === "1";
+applyExtraFeatureState(hidden);
+
+toggleBtn.addEventListener("click", () => {
+  hidden = !hidden;
+  localStorage.setItem(STORAGE_KEY, hidden ? "1" : "0");
+  applyExtraFeatureState(hidden);
+});
 
 // ===== 📘 使用說明（Help Modal） =====
 const helpModal = document.getElementById("helpModal");
