@@ -951,6 +951,7 @@ let mediaRecorder;
 let audioChunks = [];
 let currentAudioStream = null;  // 👉 記住目前麥克風串流
 
+
 /* =========================
    🎵／📈 專用詞庫（歌名／歌手／股票）
    - 可自行加更多
@@ -1499,7 +1500,7 @@ startBtn.onclick = async () => {
             autoGainControl: true
           }
         });
-        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder = new MediaRecorder(currentAudioStream, { mimeType: 'audio/webm;codecs=opus' });
 
         mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
 
