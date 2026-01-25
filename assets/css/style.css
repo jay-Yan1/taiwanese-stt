@@ -1,0 +1,569 @@
+body {
+        font-family: "Microsoft JhengHei", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: #f3f4f6;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        min-height: 100vh;
+    }
+    .container {
+        background: rgba(255, 255, 255, 0.8);
+
+        margin-top: 40px;
+        padding: 24px 28px 28px;
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        max-width: 720px;
+        width: 90%;
+    }
+    h1 {
+        font-size: 26px;
+        margin: 0 0 8px;
+        text-align: center;
+    }
+    .subtitle {
+        text-align: center;
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 20px;
+    }
+
+    .upper-controls, .lower-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+        margin-bottom: 12px;
+    }
+
+    button {
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 17px;
+        cursor: pointer;
+        transition: transform 0.05s ease, box-shadow 0.1s ease, background 0.15s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+    }
+    button:disabled {
+        opacity: 0.55;
+        cursor: default;
+        box-shadow: none;
+        transform: none;
+    }
+    button:not(:disabled):active {
+        transform: translateY(1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.12);
+    }
+    .btn-youtube {
+        background: #dc2626;   /* YouTube 紅 */
+        color: #ffffff;
+    }
+    .btn-youtube:hover:not(:disabled) {
+        background: #b91c1c;   /* 深紅 */
+    }
+    .btn-primary {
+        background: #2563eb;
+        color: #ffffff;
+        box-shadow: 0 3px 6px rgba(37, 99, 235, 0.4);
+    }
+    .btn-primary:hover:not(:disabled) {
+        background: #1d4ed8;
+    }
+
+    .btn-danger {
+        background: #dc2626;
+        color: #ffffff;
+    }
+    .btn-danger:hover:not(:disabled) {
+        background: #b91c1c;
+    }
+
+    .btn-secondary {
+        background: #e5e7eb;
+        color: #111827;
+    }
+    .btn-secondary:hover:not(:disabled) {
+        background: #d1d5db;
+    }
+
+    .btn-accent {
+        background: #f59e0b;
+        color: #111827;
+    }
+    .btn-accent:hover:not(:disabled) {
+        background: #d97706;
+    }
+
+    .btn-outline {
+        background: #ffffff;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+    .btn-outline:hover:not(:disabled) {
+        background: #f9fafb;
+    }
+
+    .status {
+        text-align: center;
+        font-size: 14px;
+        color: #4b5563;
+        margin-bottom: 10px;
+        min-height: 18px;
+    }
+
+    .output {
+        margin-top: 4px;
+        padding: 14px 16px;
+        border-radius: 10px;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+    }
+    .label {
+        font-size: 13px;
+        color: #6b7280;
+        margin-bottom: 4px;
+    }
+    .tailo {
+        font-size: 20px;
+        color: #1d4ed8;
+        word-wrap: break-word;
+        line-height: 1.5;
+        margin-bottom: 10px;
+    }
+    .hanji {
+        font-size: 24px;
+        color: #111827;
+        word-wrap: break-word;
+        line-height: 1.6;
+    }
+
+    .note {
+        margin-top: 10px;
+        font-size: 12px;
+        color: #9ca3af;
+        text-align: right;
+    }
+
+    /* 下拉選單樣式 */
+    .dropdown {
+        position: relative;
+        display: inline-block;
+    }
+    .dropdown-menu {
+        position: absolute;
+        top: 110%;
+        right: 0;
+        background: #ffffff;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+        padding: 6px 0;
+        min-width: 160px;
+        z-index: 100;
+        display: none;
+    }
+    .dropdown-menu.show {
+        display: block;
+    }
+    .dropdown-menu button {
+        width: 100%;
+        justify-content: flex-start;
+        border-radius: 0;
+        font-size: 15px;
+        padding: 8px 14px;
+        border: none;
+        background: #ffffff;
+        box-shadow: none;
+    }
+    .dropdown-menu button:hover {
+        background: #f3f4f6;
+    }
+    .dropdown-menu button:first-child {
+        border-radius: 8px 8px 0 0;
+    }
+    .dropdown-menu button:last-child {
+        border-radius: 0 0 8px 8px;
+    }
+
+    @media (max-width: 480px) {
+        button {
+            font-size: 15px;
+            padding: 7px 12px;
+        }
+        .tailo { font-size: 18px; }
+        .hanji { font-size: 22px; }
+    }
+    /* ✅ 文字匡 + 搜尋按鈕比例調整 */
+    .text-search-wrap {
+        display: flex;
+        gap: 14px;
+        align-items: stretch;
+    }
+
+    .text-area {
+        flex: 4;               /* 80% */
+    }
+
+    .search-area {
+        flex: 1;               /* 20% */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 14px;
+    }
+
+    /* ✅ 搜尋按鈕統一高度與比例 */
+    .btn-search {
+        width: 100%;
+        min-height: 52px;
+        font-size: 18px;
+    }
+
+    /* ✅ YouTube 紅色按鈕再微大一點（比較好按） */
+    .btn-youtube {
+        font-size: 19px;
+        font-weight: 600;
+    }
+
+    /* ✅ 小螢幕自動改為上下排列 */
+    @media (max-width: 600px) {
+        .text-search-wrap {
+            flex-direction: column;
+        }
+
+        .search-area {
+            flex-direction: row;
+            justify-content: space-between;
+        }
+
+        .btn-search {
+            width: 48%;
+        }   
+    }
+    .input-box{
+        width: 100%;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 10px 12px;
+        background: #ffffff;
+        resize: vertical;
+        outline: none;
+        box-sizing: border-box;
+    }
+    .input-box:focus{
+        border-color: #93c5fd;
+        box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    /* 右側：我的最愛面板（取代原搜尋按鈕區） */
+    .favorites-panel{
+        flex: 1;                 /* 原本右側區塊比例 */
+        background:#f9fafb;
+        border:1px solid #e5e7eb;
+        border-radius:10px;
+        padding:10px;
+         display:flex;
+        flex-direction:column;
+        justify-content:flex-start;
+        gap:8px;
+        min-width: 180px;
+    }
+
+    .fav-title{
+        font-size:13px;
+        color:#6b7280;
+    }
+
+    .favorites-bar{
+        display:flex;
+        flex-direction:column;
+        gap:10px;
+    }
+
+    .favorites-bar button{
+        width:100%;
+        min-height:52px;
+        font-size:18px;
+        justify-content:center;
+    }
+
+    .fav-hint{
+        margin-top:4px;
+        font-size:12px;
+        color:#9ca3af;
+        line-height:1.4;
+    }
+
+    /* 小螢幕：改成下方顯示 */
+@media (max-width: 600px) {
+    .favorites-panel{
+        width:100%;
+        min-width: unset;
+    }
+    .favorites-bar{
+        flex-direction:row;
+        flex-wrap:wrap;
+    }
+    .favorites-bar button{
+        width:48%;
+    }
+}
+/* 我的最愛：更多下拉 */
+    .fav-more-wrap {
+        position: relative;
+    }
+
+    .fav-more-menu {
+        position: absolute;
+        top: 110%;
+        right: 0;
+        background: #ffffff;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+        padding: 6px 0;
+        min-width: 170px;
+        z-index: 200;
+        display: none;
+    }
+
+    .fav-more-menu.show {
+        display: block;
+    }
+
+    .fav-more-menu button {
+        width: 100%;
+        justify-content: flex-start;
+        border-radius: 0;
+        font-size: 16px;
+        padding: 10px 12px;
+        border: none;
+        background: #ffffff;
+        box-shadow: none;
+    }
+
+    .fav-more-menu button:hover {
+        background: #f3f4f6;
+    }
+    .modal {
+        position: fixed;
+        left: 0; top: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.4);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    .modal-content {
+        background: rgba(255,255,255,0.9);
+        backdrop-filter: blur(4px);
+        padding: 20px;
+        border-radius: 14px;
+        width: 340px;
+        text-align: center;
+    }
+
+
+
+    /* handwrite candidates */
+    #hwCandList button{
+        background:#fff;
+        border:1px solid #d1d5db;
+        border-radius:10px;
+        padding:8px 10px;
+        font-size:18px;
+        cursor:pointer;
+    }
+    #hwCandList button.hw-selected{
+        border-color:#2563eb;
+        box-shadow:0 0 0 2px rgba(37,99,235,0.25);
+    }
+
+
+
+    /* ===== Handwrite modal: right-side panel (avoid blocking Hanji input) ===== */
+    #handwriteModal{
+        justify-content: flex-end;
+        align-items: flex-start;
+        padding: 80px 16px 16px 16px;
+        background: rgba(0,0,0,0); /* keep clickable overlay, but transparent */
+    }
+    #handwriteModal .modal-content{
+        width: 500px;              /* fits 424px canvas + padding */
+        max-width: 520px;
+        max-height: calc(100vh - 96px);
+        overflow: auto;
+        text-align: left;          /* more natural in side panel */
+    }
+    #handwriteModal h2{
+        text-align: left;
+        margin-top: 0;
+    }
+    #handwriteModal #handCanvas{
+        display: block;
+        max-width: 424px;
+        width: 100% !important;    /* override inline width */
+        height: auto !important;   /* keep responsive */
+        aspect-ratio: 1 / 1;
+        margin: 0;
+    }
+
+    /* On small screens, fall back to centered modal with backdrop */
+    @media (max-width: 900px){
+        #handwriteModal{
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            background: rgba(0,0,0,0.4);
+        }
+        #handwriteModal .modal-content{
+            width: min(520px, 95vw);
+            text-align: center;
+        }
+        #handwriteModal h2{ text-align:center; }
+        #handwriteModal #handCanvas{ max-width: 95vw; }
+    }
+    /* =========================
+   🧓 極簡模式 Simple Mode
+   ========================= */
+    .simple-wrap{
+      width:min(680px, 92vw);
+      margin: 28px auto;
+      background: rgba(255,255,255,.92);
+      border-radius: 18px;
+      box-shadow: 0 12px 28px rgba(0,0,0,.12);
+      padding: 22px 18px 16px;
+    }
+    .simple-title{
+      font-size: 30px;
+      line-height: 1.25;
+      margin: 0 0 6px;
+      font-weight: 800;
+      text-align:center;
+    }
+    .simple-sub{
+      font-size: 18px;
+      margin: 0 0 16px;
+      color: #374151;
+      text-align:center;
+    }
+    .big-btn{
+      width: 100%;
+      border: none;
+      border-radius: 16px;
+      padding: 18px 16px;
+      font-size: 26px;
+      font-weight: 800;
+      cursor: pointer;
+      margin: 10px 0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 10px;
+      user-select:none;
+    }
+    .big-btn:active{ transform: translateY(1px); }
+    .btn-talk{ background:#dc2626; color:#fff; }
+    .btn-youtube{ background:#16a34a; color:#fff; }
+    .btn-clear{ background:#f59e0b; color:#111827; }
+    
+    .status{
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      font-size: 22px;
+      font-weight: 800;
+      line-height: 1.4;
+      text-align:center;
+      min-height: 56px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .result{
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 14px;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+    }
+    .result .label{
+      font-size: 20px;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+    .result .text{
+      font-size: 26px;
+      font-weight: 900;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+    .result .hint{
+      margin-top: 6px;
+      font-size: 18px;
+      color: #374151;
+      line-height: 1.4;
+    }
+    .footer{
+      margin-top: 14px;
+      display:flex;
+      justify-content:center;
+    }
+    .link-advanced{
+      font-size: 14px;
+      color: #6b7280;
+      text-decoration: underline;
+      cursor: pointer;
+      padding: 6px 8px;
+      border-radius: 10px;
+    }
+    .link-advanced:hover{ background: rgba(0,0,0,.04); }
+    
+    @media (max-width: 480px){
+      .simple-title{ font-size: 28px; }
+      .big-btn{ font-size: 24px; padding: 18px 14px; }
+      .status{ font-size: 20px; }
+      .result .text{ font-size: 24px; }
+    }
+    /* 右上角顯示/隱藏非常用功能 */
+    #toggleExtraFeaturesBtn {
+      position: fixed;
+      top: 10px;
+      right: 8px;
+      z-index: 9999;
+    
+      background: #222;
+      color: #fff;
+      border: none;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      opacity: 0.85;
+    }
+    #toggleExtraFeaturesBtn:hover {
+      opacity: 1;
+    }
+    /* 漢字輸入匡強調 */
+    #hanjiOutput {
+      background: #fffbe6;
+      border: 2px solid #f59e0b;
+      border-radius: 8px;
+      font-size: 20px;
+      font-weight: 600;
+      padding: 10px;
+      box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+    }
+    
+    #hanjiOutput:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.45);
+    }
