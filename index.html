@@ -12,7 +12,8 @@
     </script>
 <meta charset="UTF-8">
 <title>台語語音輸入（台羅 + 漢字）</title>
-<link rel="stylesheet" href="assets/css/style.css?v=2024061001">
+
+<link rel="stylesheet" href="assets/css/style.css>
 </head>
 
 <body>
@@ -353,70 +354,6 @@
   </div>
 </div>
 
-<script>
-/* =========================
-   0. polyfill 和小工具
-   - blobToBase64
-   ========================= */
-  if (typeof blobToBase64 !== "function") {
-  function blobToBase64(blob) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const dataUrl = reader.result || "";
-        const base64 = String(dataUrl).split(",")[1] || "";
-        resolve(base64);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  }
-}
-/* =========================
-   1. 全域變數與共用工具程式
-    - API_KEY 管理,setApiKey,requireApiKey,clearApiKeyUI(未),updateApiKeyUI
-    - tailoToHanji 
-    - doCopyHnaji / speakHanji / doGoogleSearch / doYoutubeSearch
-    - hardMode / simpleMode 切換
-   ========================= */
-
-/* =========================
-   🔑 API 憑證管理
-   - 存在 localStorage
-   - 提供設定、清除、檢查功能
-   ========================= */
-// 🔑 API 憑證（只需輸入一次，會保存在 localStorage）
-// 你可以用下方「🔑 API 憑證」輸入並儲存，之後不用再輸入。
-let API_KEY = "";
-try { API_KEY = (localStorage.getItem("googleApiKey") || "").trim(); } catch(e) {}
-
-function setApiKey(newKey) {
-  API_KEY = (newKey || "").trim();
-  try {
-    if (API_KEY) localStorage.setItem("googleApiKey", API_KEY);
-    else localStorage.removeItem("googleApiKey");
-  } catch(e) {}
-  updateApiKeyUI();
-}
-
-function requireApiKey() {
-  if (API_KEY && API_KEY.length > 10) return true;
-  alert("尚未設定 API 憑證（API Key）。請先在下方『🔑 API 憑證』欄位輸入並儲存。");
-  try { document.getElementById("apiKeyModalInput")?.focus(); } catch(e) {}
-  return false;
-}
-
-function updateApiKeyUI() {
-  if (apiKeyStatus) {
-    apiKeyStatus.textContent = (API_KEY && API_KEY.length > 10) ? "（已儲存 ✅）" : "（未設定）";
-  }
-  if (apiKeyBtn) {
-    apiKeyBtn.textContent = (API_KEY && API_KEY.length > 10) ? "🔑 API 憑證 ✅" : "🔑 API 憑證";
-  }
-}
-/* ======
-// copy /speak hanji，複製、朗讀漢字
-===================== */
 //複製文字
 async function doCopyHanji() {
   const hanji = hanjiOutput.value.trim();
@@ -470,7 +407,6 @@ function doSpeakHanji() {
 }
 /* ======= 
 // 搜尋漢字：用目前辨識出的漢字到 Google 搜尋/youtube search
-========================= */
 //搜尋Google
 function doGoogleSearch() {
   const qText = hanjiOutput.value.trim();
@@ -826,10 +762,8 @@ const helpDefaultText = helpFallbackEl ? (helpFallbackEl.innerText || "").trim()
 
 /* ========================
 功能程式移動前暫存區
-======================== */
 /* ======
 1.使用說明區
-==================== */
 // ===== 📘 使用說明（Help Modal） =====
 const helpModal = document.getElementById("helpModal");
 const helpCloseBtn = document.getElementById("helpCloseBtn");
@@ -2629,28 +2563,7 @@ updateApiKeyUI();
 // ✅ 啟動初始模式
 initLaunchMode();
 
-/* ---- 額外：切換模式時也更新「記住模式」(可選但推薦) ----
-   這樣長輩用底部連結切換後，下次會自動進到他最後用的模式
-*/
-(function patchModeSwitchToRemember() {
-  // 包一層不破壞你原函式
-  if (typeof showSimpleMode === "function") {
-    const _showSimple = showSimpleMode;
-    showSimpleMode = function () {
-      try { setSavedMode("simple"); } catch {}
-      return _showSimple.apply(this, arguments);
-    };
-  }
-  if (typeof showAdvancedMode === "function") {
-    const _showAdvanced = showAdvancedMode;
-    showAdvancedMode = function () {
-      try { setSavedMode("advanced"); } catch {}
-      return _showAdvanced.apply(this, arguments);
-    };
-  }
-})();
 
-</script>
 </body>
 </html>
 
